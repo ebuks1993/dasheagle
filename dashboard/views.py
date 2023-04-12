@@ -5,7 +5,7 @@ import requests
 import datetime
 
 ##API
-api='http://127.0.0.1:8500'
+api='https://salesb12-production.up.railway.app/'
 
 #TEAM
 kapu='EAGLE'
