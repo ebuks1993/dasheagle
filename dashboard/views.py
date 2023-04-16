@@ -5,7 +5,7 @@ import requests
 import datetime
 
 ##API
-api='https://salesb12-production.up.railway.app/'
+api='http://salesb12-production.up.railway.app'
 
 #TEAM
 kapu='EAGLE'
@@ -63,7 +63,7 @@ def kokun(request,rep,asm):
 
 
 
-    eba=requests.get(f'http://127.0.0.1:8500/semi/?REGION=&CHANNEL=&TEAM=EAGLE&ASM={tam1}&REP={tam}')
+    eba=requests.get(f'{api}/semi/?REGION=&CHANNEL=&TEAM=EAGLE&ASM={tam1}&REP={tam}')
     eba1= eba.json()
     eba2=pd.DataFrame(eba1)
     eba3=eba2['id'].tolist()
@@ -79,11 +79,11 @@ def kokun(request,rep,asm):
     pr3=(pr22['Amount'].sum())/1000000
 
     ## Last year
-    prm=requests.get(f'{api}/Prevcollection/?Date__gte={lqdap2}&Date__lte={qdap2}')
-    prm1=prm.json()
-    prm2=pd.DataFrame(prm1)
-    prm22=prm2[prm2['semi'].isin(eba3)]
-    prm3=(prm22['Amount'].sum())/1000000
+    # prm=requests.get(f'{api}/Prevcollection/?Date__gte={lqdap2}&Date__lte={qdap2}')
+    # prm1=prm.json()
+    # prm2=pd.DataFrame(prm1)
+    # prm22=prm2[prm2['semi'].isin(eba3)]
+    # prm3=(prm22['Amount'].sum())/1000000
 
 
     opy=requests.get(f"{api}/Budget/?procode=&TEAM={kapu}")
@@ -95,7 +95,7 @@ def kokun(request,rep,asm):
 
 
     ## ytd collection growth
-    colgrowth=(pr3-prm3)/prm3
+    # colgrowth=(pr3-prm3)/prm3
 
     ## ytd budget achiived
     sca=(pr3/opy4)*100
@@ -103,8 +103,14 @@ def kokun(request,rep,asm):
 
     ##MTD for collection
     ##current
-    mpr=pr22[(pr22['Date']<=Rqdap)&(pr22['Date']>=Rqdap2)]
-    mpr2=(mpr['Amount'].sum())/1000000
+    # mpr=pr22[(pr22['Date']<=Rqdap)&(pr22['Date']>=Rqdap2)]
+    # # mpr2=(mpr['Amount'].sum())/1000000
+
+    mpr=requests.get(f"{api}/collection/?Date__gte={Rqdap2}&Date__lte={Rqdap}")
+    mpra=mpr.json()
+    mprb=pd.DataFrame(mpra)
+    mprc=mprb[mprb['semi'].isin(eba3)]
+    mpr2=(mprc['Amount'].sum())/1000000
 
     ## previous
 
@@ -135,8 +141,11 @@ def kokun(request,rep,asm):
 
     ##MTD forsales
     ##current for sales
-    smpr=spr22[(spr22['Date']<=Rqdap)&(spr22['Date']>=Rqdap2)]
-    smpr2=(smpr['Money'].sum())/1000000
+    smpr=requests.get(f"{api}/current/?Date__gte={Rqdap2}&Date__lte={Rqdap}")
+    smpra=smpr.json()
+    smprb=pd.DataFrame(smpra)
+    smprc=smprb[smprb['semi'].isin(eba3)]
+    smpr2=(smprc['Money'].sum())/1000000
 
     ## previous
 
@@ -156,7 +165,7 @@ def kokun(request,rep,asm):
 
 
 
-    finta={'curcol':pr3,'lastcol':prm3,'colgrowth':colgrowth,'ytdbudget':opy4,'mtdbudget':opy5,'mcol':mpr2,'mcba':mcba,'sca':sca,'cursales':spr3,
+    finta={'curcol':pr3,'ytdbudget':opy4,'mtdbudget':opy5,'mcol':mpr2,'mcba':mcba,'sca':sca,'cursales':spr3,
         'lastsales':sprm3,'salgrowth':salgrowth,'sba':sba,'msal':smpr2,'msa':smcba}
     
 
@@ -175,7 +184,8 @@ def kokun(request,rep,asm):
     prod5['tgt']=prod5['value']*rwe2
 
     ## mtd
-    rod1=(smpr.groupby(['pro','product'])[['ctns']].sum()).reset_index()
+    rod1=(smprc.groupby(['pro','product'])[['ctns']].sum()).reset_index()
+
 
     prod6=pd.merge(prod5,rod1,on='pro',how='left')
     prod7=prod6.fillna(0)
@@ -195,12 +205,12 @@ def kokun(request,rep,asm):
 
     #-------------------------TREND CHART------------------------------------------
 
-    lprm=requests.get(f'{api}/Prevcollection/?Date__gte=&Date__lte=')
-    lprm1=lprm.json()
-    lprm2=pd.DataFrame(lprm1)
-    lprm22=lprm2[lprm2['semi'].isin(eba3)]
-    lprm22['num']=pd.DatetimeIndex(lprm22['Date']).month
-    cur2=lprm22.groupby(['num'])['Amount'].sum()
+    # lprm=requests.get(f'{api}/Prevcollection/?Date__gte=&Date__lte=')
+    # lprm1=lprm.json()
+    # lprm2=pd.DataFrame(lprm1)
+    # lprm22=lprm2[lprm2['semi'].isin(eba3)]
+    # lprm22['num']=pd.DatetimeIndex(lprm22['Date']).month
+    # cur2=lprm22.groupby(['num'])['Amount'].sum()
 
     pr23=pr22.copy()
     pr23['num']=pd.DatetimeIndex(pr23['Date']).month
@@ -209,13 +219,13 @@ def kokun(request,rep,asm):
 
     ## merge all
     ped1=pd.merge(sunk,cur1,on='num',how='left')
-    ped2=pd.merge(ped1,cur2,on='num',how='left')
+    # ped2=pd.merge(ped1,cur2,on='num',how='left')
 
-    ped3=ped2.fillna(0)
+    ped3=ped1.fillna(0)
 
     ped3['budget']=opy5
-    ped3['Amount_x1']=ped3['Amount_x']/1000000
-    ped3['Amount_y1']=ped3['Amount_y']/1000000
+    ped3['Amount_x1']=ped3['Amount']/1000000
+    # ped3['Amount_y1']=ped3['Amount_y']/1000000
 
 
     trcbsr=ped3.to_json(orient='records')
@@ -307,7 +317,7 @@ def area (request,asm,reg):
 
 
 
-    eba=requests.get(f'http://127.0.0.1:8500/semi/?REGION={reg}&CHANNEL=&TEAM=EAGLE&ASM={tam1}&REP=')
+    eba=requests.get(f'{api}/semi/?REGION={reg}&CHANNEL=&TEAM=EAGLE&ASM={tam1}&REP=')
     eba1= eba.json()
     eba2=pd.DataFrame(eba1)
     eba3=eba2['id'].tolist()
@@ -323,11 +333,11 @@ def area (request,asm,reg):
     pr3=(pr22['Amount'].sum())/1000000
 
     ## Last year
-    prm=requests.get(f'{api}/Prevcollection/?Date__gte={lqdap2}&Date__lte={qdap2}')
-    prm1=prm.json()
-    prm2=pd.DataFrame(prm1)
-    prm22=prm2[prm2['semi'].isin(eba3)]
-    prm3=(prm22['Amount'].sum())/1000000
+    # prm=requests.get(f'{api}/Prevcollection/?Date__gte={lqdap2}&Date__lte={qdap2}')
+    # prm1=prm.json()
+    # prm2=pd.DataFrame(prm1)
+    # prm22=prm2[prm2['semi'].isin(eba3)]
+    # prm3=(prm22['Amount'].sum())/1000000
 
 
     opy=requests.get(f"{api}/Budget/?procode=&TEAM={kapu}")
@@ -339,7 +349,7 @@ def area (request,asm,reg):
 
 
     ## ytd collection growth
-    colgrowth=(pr3-prm3)/prm3
+    # colgrowth=(pr3-prm3)/prm3
 
     ## ytd budget achiived
     sca=(pr3/opy4)*100
@@ -347,8 +357,13 @@ def area (request,asm,reg):
 
     ##MTD for collection
     ##current
-    mpr=pr22[(pr22['Date']<=Rqdap)&(pr22['Date']>=Rqdap2)]
-    mpr2=(mpr['Amount'].sum())/1000000
+    # mpr=pr22[(pr22['Date']<=Rqdap)&(pr22['Date']>=Rqdap2)]
+    # mpr2=(mpr['Amount'].sum())/1000000
+    mpr=requests.get(f"{api}/collection/?Date__gte={Rqdap2}&Date__lte={Rqdap}")
+    mpra=mpr.json()
+    mprb=pd.DataFrame(mpra)
+    mprc=mprb[mprb['semi'].isin(eba3)]
+    mpr2=(mprc['Amount'].sum())/1000000
 
     ## previous
 
@@ -379,8 +394,11 @@ def area (request,asm,reg):
 
     ##MTD forsales
     ##current for sales
-    smpr=spr22[(spr22['Date']<=Rqdap)&(spr22['Date']>=Rqdap2)]
-    smpr2=(smpr['Money'].sum())/1000000
+    smpr=requests.get(f"{api}/current/?Date__gte={Rqdap2}&Date__lte={Rqdap}")
+    smpra=smpr.json()
+    smprb=pd.DataFrame(smpra)
+    smprc=smprb[smprb['semi'].isin(eba3)]
+    smpr2=(smprc['Money'].sum())/1000000
 
     ## previous
 
@@ -400,7 +418,7 @@ def area (request,asm,reg):
 
 
 
-    finta={'curcol':pr3,'lastcol':prm3,'colgrowth':colgrowth,'ytdbudget':opy4,'mtdbudget':opy5,'mcol':mpr2,'mcba':mcba,'sca':sca,'cursales':spr3,
+    finta={'curcol':pr3,'ytdbudget':opy4,'mtdbudget':opy5,'mcol':mpr2,'mcba':mcba,'sca':sca,'cursales':spr3,
         'lastsales':sprm3,'salgrowth':salgrowth,'sba':sba,'msal':smpr2,'msa':smcba}
     
 
@@ -419,7 +437,8 @@ def area (request,asm,reg):
     prod5['tgt']=prod5['value']*rwe2
 
     ## mtd
-    rod1=(smpr.groupby(['pro','product'])[['ctns']].sum()).reset_index()
+    rod1=(smprc.groupby(['pro','product'])[['ctns']].sum()).reset_index()
+
 
     prod6=pd.merge(prod5,rod1,on='pro',how='left')
     prod7=prod6.fillna(0)
@@ -439,12 +458,12 @@ def area (request,asm,reg):
 
     #-------------------------TREND CHART------------------------------------------
 
-    lprm=requests.get(f'{api}/Prevcollection/?Date__gte=&Date__lte=')
-    lprm1=lprm.json()
-    lprm2=pd.DataFrame(lprm1)
-    lprm22=lprm2[lprm2['semi'].isin(eba3)]
-    lprm22['num']=pd.DatetimeIndex(lprm22['Date']).month
-    cur2=lprm22.groupby(['num'])['Amount'].sum()
+    # lprm=requests.get(f'{api}/Prevcollection/?Date__gte=&Date__lte=')
+    # lprm1=lprm.json()
+    # lprm2=pd.DataFrame(lprm1)
+    # lprm22=lprm2[lprm2['semi'].isin(eba3)]
+    # lprm22['num']=pd.DatetimeIndex(lprm22['Date']).month
+    # cur2=lprm22.groupby(['num'])['Amount'].sum()
 
     pr23=pr22.copy()
     pr23['num']=pd.DatetimeIndex(pr23['Date']).month
@@ -453,13 +472,13 @@ def area (request,asm,reg):
 
     ## merge all
     ped1=pd.merge(sunk,cur1,on='num',how='left')
-    ped2=pd.merge(ped1,cur2,on='num',how='left')
+    # ped2=pd.merge(ped1,cur2,on='num',how='left')
 
-    ped3=ped2.fillna(0)
+    ped3=ped1.fillna(0)
 
     ped3['budget']=opy5
-    ped3['Amount_x1']=ped3['Amount_x']/1000000
-    ped3['Amount_y1']=ped3['Amount_y']/1000000
+    ped3['Amount_x1']=ped3['Amount']/1000000
+    # ped3['Amount_y1']=ped3['Amount_y']/1000000
 
 
     trcbsr=ped3.to_json(orient='records')
@@ -553,7 +572,7 @@ def region (request,reg):
 
 
 
-    eba=requests.get(f'http://127.0.0.1:8500/semi/?REGION={reg}&CHANNEL=&TEAM=EAGLE&ASM=&REP=&SEGMENT=Marketing')
+    eba=requests.get(f'{api}/semi/?REGION={reg}&CHANNEL=&TEAM=EAGLE&ASM=&REP=&SEGMENT=Marketing')
     eba1= eba.json()
     eba2=pd.DataFrame(eba1)
     eba3=eba2['id'].tolist()
@@ -569,11 +588,11 @@ def region (request,reg):
     pr3=(pr22['Amount'].sum())/1000000
 
     ## Last year
-    prm=requests.get(f'{api}/Prevcollection/?Date__gte={lqdap2}&Date__lte={qdap2}')
-    prm1=prm.json()
-    prm2=pd.DataFrame(prm1)
-    prm22=prm2[prm2['semi'].isin(eba3)]
-    prm3=(prm22['Amount'].sum())/1000000
+    # prm=requests.get(f'{api}/Prevcollection/?Date__gte={lqdap2}&Date__lte={qdap2}')
+    # prm1=prm.json()
+    # prm2=pd.DataFrame(prm1)
+    # prm22=prm2[prm2['semi'].isin(eba3)]
+    # prm3=(prm22['Amount'].sum())/1000000
 
 
     opy=requests.get(f"{api}/Budget/?procode=&TEAM={kapu}")
@@ -585,7 +604,7 @@ def region (request,reg):
 
 
     ## ytd collection growth
-    colgrowth=(pr3-prm3)/prm3
+    # colgrowth=(pr3-prm3)/prm3
 
     ## ytd budget achiived
     sca=(pr3/opy4)*100
@@ -593,8 +612,14 @@ def region (request,reg):
 
     ##MTD for collection
     ##current
-    mpr=pr22[(pr22['Date']<=Rqdap)&(pr22['Date']>=Rqdap2)]
-    mpr2=(mpr['Amount'].sum())/1000000
+    # mpr=pr22[(pr22['Date']<=Rqdap)&(pr22['Date']>=Rqdap2)]
+    # mpr2=(mpr['Amount'].sum())/1000000
+
+    mpr=requests.get(f"{api}/collection/?Date__gte={Rqdap2}&Date__lte={Rqdap}")
+    mpra=mpr.json()
+    mprb=pd.DataFrame(mpra)
+    mprc=mprb[mprb['semi'].isin(eba3)]
+    mpr2=(mprc['Amount'].sum())/1000000
 
     ## previous
 
@@ -625,8 +650,11 @@ def region (request,reg):
 
     ##MTD forsales
     ##current for sales
-    smpr=spr22[(spr22['Date']<=Rqdap)&(spr22['Date']>=Rqdap2)]
-    smpr2=(smpr['Money'].sum())/1000000
+    smpr=requests.get(f"{api}/current/?Date__gte={Rqdap2}&Date__lte={Rqdap}")
+    smpra=smpr.json()
+    smprb=pd.DataFrame(smpra)
+    smprc=smprb[smprb['semi'].isin(eba3)]
+    smpr2=(smprc['Money'].sum())/1000000
 
     ## previous
 
@@ -646,7 +674,7 @@ def region (request,reg):
 
 
 
-    finta={'curcol':pr3,'lastcol':prm3,'colgrowth':colgrowth,'ytdbudget':opy4,'mtdbudget':opy5,'mcol':mpr2,'mcba':mcba,'sca':sca,'cursales':spr3,
+    finta={'curcol':pr3,'ytdbudget':opy4,'mtdbudget':opy5,'mcol':mpr2,'mcba':mcba,'sca':sca,'cursales':spr3,
         'lastsales':sprm3,'salgrowth':salgrowth,'sba':sba,'msal':smpr2,'msa':smcba}
     
 
@@ -665,7 +693,8 @@ def region (request,reg):
     prod5['tgt']=prod5['value']*rwe2
 
     ## mtd
-    rod1=(smpr.groupby(['pro','product'])[['ctns']].sum()).reset_index()
+    rod1=(smprc.groupby(['pro','product'])[['ctns']].sum()).reset_index()
+
 
     prod6=pd.merge(prod5,rod1,on='pro',how='left')
     prod7=prod6.fillna(0)
@@ -685,12 +714,12 @@ def region (request,reg):
 
     #-------------------------TREND CHART------------------------------------------
 
-    lprm=requests.get(f'{api}/Prevcollection/?Date__gte=&Date__lte=')
-    lprm1=lprm.json()
-    lprm2=pd.DataFrame(lprm1)
-    lprm22=lprm2[lprm2['semi'].isin(eba3)]
-    lprm22['num']=pd.DatetimeIndex(lprm22['Date']).month
-    cur2=lprm22.groupby(['num'])['Amount'].sum()
+    # lprm=requests.get(f'{api}/Prevcollection/?Date__gte=&Date__lte=')
+    # lprm1=lprm.json()
+    # lprm2=pd.DataFrame(lprm1)
+    # lprm22=lprm2[lprm2['semi'].isin(eba3)]
+    # lprm22['num']=pd.DatetimeIndex(lprm22['Date']).month
+    # cur2=lprm22.groupby(['num'])['Amount'].sum()
 
     pr23=pr22.copy()
     pr23['num']=pd.DatetimeIndex(pr23['Date']).month
@@ -699,13 +728,13 @@ def region (request,reg):
 
     ## merge all
     ped1=pd.merge(sunk,cur1,on='num',how='left')
-    ped2=pd.merge(ped1,cur2,on='num',how='left')
+    # ped2=pd.merge(ped1,cur2,on='num',how='left')
 
-    ped3=ped2.fillna(0)
+    ped3=ped1.fillna(0)
 
     ped3['budget']=opy5
-    ped3['Amount_x1']=ped3['Amount_x']/1000000
-    ped3['Amount_y1']=ped3['Amount_y']/1000000
+    ped3['Amount_x1']=ped3['Amount']/1000000
+    # ped3['Amount_y1']=ped3['Amount_y']/1000000
 
 
     trcbsr=ped3.to_json(orient='records')
@@ -791,7 +820,7 @@ def distributors (request,dist):
 
 
 
-    eba=requests.get(f'http://127.0.0.1:8500/semi/?REGION=&CHANNEL={dist}&TEAM=EAGLE&ASM=&REP=')
+    eba=requests.get(f'{api}/semi/?REGION=&CHANNEL={dist}&TEAM=EAGLE&ASM=&REP=')
     eba1= eba.json()
     eba2=pd.DataFrame(eba1)
     eba3=eba2['id'].tolist()
@@ -807,11 +836,11 @@ def distributors (request,dist):
     pr3=(pr22['Amount'].sum())/1000000
 
     ## Last year
-    prm=requests.get(f'{api}/Prevcollection/?Date__gte={lqdap2}&Date__lte={qdap2}')
-    prm1=prm.json()
-    prm2=pd.DataFrame(prm1)
-    prm22=prm2[prm2['semi'].isin(eba3)]
-    prm3=(prm22['Amount'].sum())/1000000
+    # prm=requests.get(f'{api}/Prevcollection/?Date__gte={lqdap2}&Date__lte={qdap2}')
+    # prm1=prm.json()
+    # prm2=pd.DataFrame(prm1)
+    # prm22=prm2[prm2['semi'].isin(eba3)]
+    # prm3=(prm22['Amount'].sum())/1000000
 
 
     opy=requests.get(f"{api}/Budget/?procode=&TEAM={kapu}")
@@ -823,7 +852,7 @@ def distributors (request,dist):
 
 
     ## ytd collection growth
-    colgrowth=(pr3-prm3)/prm3
+    # colgrowth=(pr3-prm3)/prm3
 
     ## ytd budget achiived
     sca=(pr3/opy4)*100
@@ -831,8 +860,14 @@ def distributors (request,dist):
 
     ##MTD for collection
     ##current
-    mpr=pr22[(pr22['Date']<=Rqdap)&(pr22['Date']>=Rqdap2)]
-    mpr2=(mpr['Amount'].sum())/1000000
+    # mpr=pr22[(pr22['Date']<=Rqdap)&(pr22['Date']>=Rqdap2)]
+    # mpr2=(mpr['Amount'].sum())/1000000
+
+    mpr=requests.get(f"{api}/collection/?Date__gte={Rqdap2}&Date__lte={Rqdap}")
+    mpra=mpr.json()
+    mprb=pd.DataFrame(mpra)
+    mprc=mprb[mprb['semi'].isin(eba3)]
+    mpr2=(mprc['Amount'].sum())/1000000
 
     ## previous
 
@@ -863,8 +898,11 @@ def distributors (request,dist):
 
     ##MTD forsales
     ##current for sales
-    smpr=spr22[(spr22['Date']<=Rqdap)&(spr22['Date']>=Rqdap2)]
-    smpr2=(smpr['Money'].sum())/1000000
+    smpr=requests.get(f"{api}/current/?Date__gte={Rqdap2}&Date__lte={Rqdap}")
+    smpra=smpr.json()
+    smprb=pd.DataFrame(smpra)
+    smprc=smprb[smprb['semi'].isin(eba3)]
+    smpr2=(smprc['Money'].sum())/1000000
 
     ## previous
 
@@ -884,7 +922,7 @@ def distributors (request,dist):
 
 
 
-    finta={'curcol':pr3,'lastcol':prm3,'colgrowth':colgrowth,'ytdbudget':opy4,'mtdbudget':opy5,'mcol':mpr2,'mcba':mcba,'sca':sca,'cursales':spr3,
+    finta={'curcol':pr3,'ytdbudget':opy4,'mtdbudget':opy5,'mcol':mpr2,'mcba':mcba,'sca':sca,'cursales':spr3,
         'lastsales':sprm3,'salgrowth':salgrowth,'sba':sba,'msal':smpr2,'msa':smcba}
     
 
@@ -903,7 +941,8 @@ def distributors (request,dist):
     prod5['tgt']=prod5['value']*rwe2
 
     ## mtd
-    rod1=(smpr.groupby(['pro','product'])[['ctns']].sum()).reset_index()
+    rod1=(smprc.groupby(['pro','product'])[['ctns']].sum()).reset_index()
+
 
     prod6=pd.merge(prod5,rod1,on='pro',how='left')
     prod7=prod6.fillna(0)
@@ -923,12 +962,12 @@ def distributors (request,dist):
 
     #-------------------------TREND CHART------------------------------------------
 
-    lprm=requests.get(f'{api}/Prevcollection/?Date__gte=&Date__lte=')
-    lprm1=lprm.json()
-    lprm2=pd.DataFrame(lprm1)
-    lprm22=lprm2[lprm2['semi'].isin(eba3)]
-    lprm22['num']=pd.DatetimeIndex(lprm22['Date']).month
-    cur2=lprm22.groupby(['num'])['Amount'].sum()
+    # lprm=requests.get(f'{api}/Prevcollection/?Date__gte=&Date__lte=')
+    # lprm1=lprm.json()
+    # lprm2=pd.DataFrame(lprm1)
+    # lprm22=lprm2[lprm2['semi'].isin(eba3)]
+    # lprm22['num']=pd.DatetimeIndex(lprm22['Date']).month
+    # cur2=lprm22.groupby(['num'])['Amount'].sum()
 
     pr23=pr22.copy()
     pr23['num']=pd.DatetimeIndex(pr23['Date']).month
@@ -937,13 +976,13 @@ def distributors (request,dist):
 
     ## merge all
     ped1=pd.merge(sunk,cur1,on='num',how='left')
-    ped2=pd.merge(ped1,cur2,on='num',how='left')
+    # ped2=pd.merge(ped1,cur2,on='num',how='left')
 
-    ped3=ped2.fillna(0)
+    ped3=ped1.fillna(0)
 
     ped3['budget']=opy5
-    ped3['Amount_x1']=ped3['Amount_x']/1000000
-    ped3['Amount_y1']=ped3['Amount_y']/1000000
+    ped3['Amount_x1']=ped3['Amount']/1000000
+    # ped3['Amount_y1']=ped3['Amount_y']/1000000
 
 
     trcbsr=ped3.to_json(orient='records')
@@ -1025,7 +1064,7 @@ def team (request):
 
 
 
-    eba=requests.get(f'http://127.0.0.1:8500/semi/?REGION=&CHANNEL=&TEAM=EAGLE&ASM=&REP=')
+    eba=requests.get(f'{api}/semi/?REGION=&CHANNEL=&TEAM=EAGLE&ASM=&REP=')
     eba1= eba.json()
     eba2=pd.DataFrame(eba1)
     eba3=eba2['id'].tolist()
@@ -1041,11 +1080,11 @@ def team (request):
     pr3=(pr22['Amount'].sum())/1000000
 
     ## Last year
-    prm=requests.get(f'{api}/Prevcollection/?Date__gte={lqdap2}&Date__lte={qdap2}')
-    prm1=prm.json()
-    prm2=pd.DataFrame(prm1)
-    prm22=prm2[prm2['semi'].isin(eba3)]
-    prm3=(prm22['Amount'].sum())/1000000
+    # prm=requests.get(f'{api}/Prevcollection/?Date__gte={lqdap2}&Date__lte={qdap2}')
+    # prm1=prm.json()
+    # prm2=pd.DataFrame(prm1)
+    # prm22=prm2[prm2['semi'].isin(eba3)]
+    # prm3=(prm22['Amount'].sum())/1000000
 
 
     opy=requests.get(f"{api}/Budget/?procode=&TEAM={kapu}")
@@ -1057,7 +1096,7 @@ def team (request):
 
 
     ## ytd collection growth
-    colgrowth=(pr3-prm3)/prm3
+    # colgrowth=(pr3-prm3)/prm3
 
     ## ytd budget achiived
     sca=(pr3/opy4)*100
@@ -1065,8 +1104,14 @@ def team (request):
 
     ##MTD for collection
     ##current
-    mpr=pr22[(pr22['Date']<=Rqdap)&(pr22['Date']>=Rqdap2)]
-    mpr2=(mpr['Amount'].sum())/1000000
+    # mpr=pr22[(pr22['Date']<=Rqdap)&(pr22['Date']>=Rqdap2)]
+    # mpr2=(mpr['Amount'].sum())/1000000
+
+    mpr=requests.get(f"{api}/collection/?Date__gte={Rqdap2}&Date__lte={Rqdap}")
+    mpra=mpr.json()
+    mprb=pd.DataFrame(mpra)
+    mprc=mprb[mprb['semi'].isin(eba3)]
+    mpr2= (mprc['Amount'].sum())/1000000
 
     ## previous
 
@@ -1097,8 +1142,11 @@ def team (request):
 
     ##MTD forsales
     ##current for sales
-    smpr=spr22[(spr22['Date']<=Rqdap)&(spr22['Date']>=Rqdap2)]
-    smpr2=(smpr['Money'].sum())/1000000
+    smpr=requests.get(f"{api}/current/?Date__gte={Rqdap2}&Date__lte={Rqdap}")
+    smpra=smpr.json()
+    smprb=pd.DataFrame(smpra)
+    smprc=smprb[smprb['semi'].isin(eba3)]
+    smpr2=(smprc['Money'].sum())/1000000
 
     ## previous
 
@@ -1118,7 +1166,7 @@ def team (request):
 
 
 
-    finta={'curcol':pr3,'lastcol':prm3,'colgrowth':colgrowth,'ytdbudget':opy4,'mtdbudget':opy5,'mcol':mpr2,'mcba':mcba,'sca':sca,'cursales':spr3,
+    finta={'curcol':pr3,'ytdbudget':opy4,'mtdbudget':opy5,'mcol':mpr2,'mcba':mcba,'sca':sca,'cursales':spr3,
         'lastsales':sprm3,'salgrowth':salgrowth,'sba':sba,'msal':smpr2,'msa':smcba}
     
 
@@ -1137,7 +1185,8 @@ def team (request):
     prod5['tgt']=prod5['value']*rwe2
 
     ## mtd
-    rod1=(smpr.groupby(['pro','product'])[['ctns']].sum()).reset_index()
+    rod1=(smprc.groupby(['pro','product'])[['ctns']].sum()).reset_index()
+
 
     prod6=pd.merge(prod5,rod1,on='pro',how='left')
     prod7=prod6.fillna(0)
@@ -1157,12 +1206,12 @@ def team (request):
 
     #-------------------------TREND CHART------------------------------------------
 
-    lprm=requests.get(f'{api}/Prevcollection/?Date__gte=&Date__lte=')
-    lprm1=lprm.json()
-    lprm2=pd.DataFrame(lprm1)
-    lprm22=lprm2[lprm2['semi'].isin(eba3)]
-    lprm22['num']=pd.DatetimeIndex(lprm22['Date']).month
-    cur2=lprm22.groupby(['num'])['Amount'].sum()
+    # lprm=requests.get(f'{api}/Prevcollection/?Date__gte=&Date__lte=')
+    # lprm1=lprm.json()
+    # lprm2=pd.DataFrame(lprm1)
+    # lprm22=lprm2[lprm2['semi'].isin(eba3)]
+    # lprm22['num']=pd.DatetimeIndex(lprm22['Date']).month
+    # cur2=lprm22.groupby(['num'])['Amount'].sum()
 
     pr23=pr22.copy()
     pr23['num']=pd.DatetimeIndex(pr23['Date']).month
@@ -1171,13 +1220,13 @@ def team (request):
 
     ## merge all
     ped1=pd.merge(sunk,cur1,on='num',how='left')
-    ped2=pd.merge(ped1,cur2,on='num',how='left')
+    # ped2=pd.merge(ped1,cur2,on='num',how='left')
 
-    ped3=ped2.fillna(0)
+    ped3=ped1.fillna(0)
 
     ped3['budget']=opy5
-    ped3['Amount_x1']=ped3['Amount_x']/1000000
-    ped3['Amount_y1']=ped3['Amount_y']/1000000
+    ped3['Amount_x1']=ped3['Amount']/1000000
+    # ped3['Amount_y1']=ped3['Amount_y']/1000000
 
 
     trcbsr=ped3.to_json(orient='records')
@@ -1258,7 +1307,7 @@ def marketing (request):
 
 
 
-    eba=requests.get(f'http://127.0.0.1:8500/semi/?REGION=&CHANNEL=&TEAM=EAGLE&ASM=&REP=&SEGMENT=Marketing')
+    eba=requests.get(f'{api}/semi/?REGION=&CHANNEL=&TEAM=EAGLE&ASM=&REP=&SEGMENT=Marketing')
     eba1= eba.json()
     eba2=pd.DataFrame(eba1)
     eba3=eba2['id'].tolist()
@@ -1273,12 +1322,12 @@ def marketing (request):
     pr22=pr2[pr2['semi'].isin(eba3)]
     pr3=(pr22['Amount'].sum())/1000000
 
-    ## Last year
-    prm=requests.get(f'{api}/Prevcollection/?Date__gte={lqdap2}&Date__lte={qdap2}')
-    prm1=prm.json()
-    prm2=pd.DataFrame(prm1)
-    prm22=prm2[prm2['semi'].isin(eba3)]
-    prm3=(prm22['Amount'].sum())/1000000
+    # ## Last year
+    # prm=requests.get(f'{api}/Prevcollection/?Date__gte={lqdap2}&Date__lte={qdap2}')
+    # prm1=prm.json()
+    # prm2=pd.DataFrame(prm1)
+    # prm22=prm2[prm2['semi'].isin(eba3)]
+    # prm3=(prm22['Amount'].sum())/1000000
 
 
     opy=requests.get(f"{api}/Budget/?procode=&TEAM={kapu}")
@@ -1290,7 +1339,7 @@ def marketing (request):
 
 
     ## ytd collection growth
-    colgrowth=(pr3-prm3)/prm3
+    # colgrowth=(pr3-prm3)/prm3
 
     ## ytd budget achiived
     sca=(pr3/opy4)*100
@@ -1298,8 +1347,13 @@ def marketing (request):
 
     ##MTD for collection
     ##current
-    mpr=pr22[(pr22['Date']<=Rqdap)&(pr22['Date']>=Rqdap2)]
-    mpr2=(mpr['Amount'].sum())/1000000
+    # mpr=pr22[(pr22['Date']<=Rqdap)&(pr22['Date']>=Rqdap2)]
+    # mpr2=(mpr['Amount'].sum())/1000000
+    mpr=requests.get(f"{api}/collection/?Date__gte={Rqdap2}&Date__lte={Rqdap}")
+    mpra=mpr.json()
+    mprb=pd.DataFrame(mpra)
+    mprc=mprb[mprb['semi'].isin(eba3)]
+    mpr2=(mprc['Amount'].sum())/1000000
 
     ## previous
 
@@ -1330,8 +1384,11 @@ def marketing (request):
 
     ##MTD forsales
     ##current for sales
-    smpr=spr22[(spr22['Date']<=Rqdap)&(spr22['Date']>=Rqdap2)]
-    smpr2=(smpr['Money'].sum())/1000000
+    smpr=requests.get(f"{api}/current/?Date__gte={Rqdap2}&Date__lte={Rqdap}")
+    smpra=smpr.json()
+    smprb=pd.DataFrame(smpra)
+    smprc=smprb[smprb['semi'].isin(eba3)]
+    smpr2=(smprc['Money'].sum())/1000000
 
     ## previous
 
@@ -1351,7 +1408,7 @@ def marketing (request):
 
 
 
-    finta={'curcol':pr3,'lastcol':prm3,'colgrowth':colgrowth,'ytdbudget':opy4,'mtdbudget':opy5,'mcol':mpr2,'mcba':mcba,'sca':sca,'cursales':spr3,
+    finta={'curcol':pr3,'ytdbudget':opy4,'mtdbudget':opy5,'mcol':mpr2,'mcba':mcba,'sca':sca,'cursales':spr3,
         'lastsales':sprm3,'salgrowth':salgrowth,'sba':sba,'msal':smpr2,'msa':smcba}
     
 
@@ -1370,7 +1427,8 @@ def marketing (request):
     prod5['tgt']=prod5['value']*rwe2
 
     ## mtd
-    rod1=(smpr.groupby(['pro','product'])[['ctns']].sum()).reset_index()
+    rod1=(smprc.groupby(['pro','product'])[['ctns']].sum()).reset_index()
+
 
     prod6=pd.merge(prod5,rod1,on='pro',how='left')
     prod7=prod6.fillna(0)
@@ -1390,12 +1448,12 @@ def marketing (request):
 
     #-------------------------TREND CHART------------------------------------------
 
-    lprm=requests.get(f'{api}/Prevcollection/?Date__gte=&Date__lte=')
-    lprm1=lprm.json()
-    lprm2=pd.DataFrame(lprm1)
-    lprm22=lprm2[lprm2['semi'].isin(eba3)]
-    lprm22['num']=pd.DatetimeIndex(lprm22['Date']).month
-    cur2=lprm22.groupby(['num'])['Amount'].sum()
+    # lprm=requests.get(f'{api}/Prevcollection/?Date__gte=&Date__lte=')
+    # lprm1=lprm.json()
+    # lprm2=pd.DataFrame(lprm1)
+    # lprm22=lprm2[lprm2['semi'].isin(eba3)]
+    # lprm22['num']=pd.DatetimeIndex(lprm22['Date']).month
+    # cur2=lprm22.groupby(['num'])['Amount'].sum()
 
     pr23=pr22.copy()
     pr23['num']=pd.DatetimeIndex(pr23['Date']).month
@@ -1404,13 +1462,13 @@ def marketing (request):
 
     ## merge all
     ped1=pd.merge(sunk,cur1,on='num',how='left')
-    ped2=pd.merge(ped1,cur2,on='num',how='left')
+    # ped2=pd.merge(ped1,cur2,on='num',how='left')
 
-    ped3=ped2.fillna(0)
+    ped3=ped1.fillna(0)
 
     ped3['budget']=opy5
-    ped3['Amount_x1']=ped3['Amount_x']/1000000
-    ped3['Amount_y1']=ped3['Amount_y']/1000000
+    ped3['Amount_x1']=ped3['Amount']/1000000
+    # ped3['Amount_y1']=ped3['Amount_y']/1000000
 
 
     trcbsr=ped3.to_json(orient='records')

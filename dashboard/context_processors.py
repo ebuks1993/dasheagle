@@ -5,11 +5,11 @@ import json
 
 
 ## Api base 
-api='http://127.0.0.1:8500'
+api='http://salesb12-production.up.railway.app'
 
 
 def side(request):
-    red=requests.get(f'{api}/semi')
+    red=requests.get(f'{api}/semi/?REGION=&CHANNEL=&TEAM=&ASM=&REP=&SEGMENT=&condition=Active')
     red1=red.json()
     red2=pd.DataFrame(red1)
     red21=red2[red2['TEAM']=='EAGLE']
